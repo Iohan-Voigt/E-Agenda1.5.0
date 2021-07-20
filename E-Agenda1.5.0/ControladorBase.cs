@@ -7,55 +7,41 @@ namespace E_Agenda1._5._0.Controlador
 {
     public abstract class ControladorBase<T>
     {
-        public static string enderecoBancoAgenda = ObterEnderecoBanco().ToString();
-        public static SqlConnection conexaoComBancoAgendaSql = new SqlConnection(enderecoBancoAgenda);
-        public static SQLiteConnection conexaoComBancoAgendaSqlite = new SQLiteConnection(enderecoBancoAgenda);
-
         public bool InserirRegistro(T registro)
         {
             bool conseguiuInserir = false;
-            AbrirBanco();
-            ObterComandoInserir(registro);
-            FecharBanco();
+            Inserir(registro);
             return conseguiuInserir;
         }
 
-        public bool ExcluiRegistro(int id)
+        public bool ExcluiRegistro(T registro)
         {
             bool conseguiuExcluir = false;
-            conseguiuExcluir = true;
-            AbrirBanco();
-            ObterComandoExcluir(id);
-            FecharBanco();
+            Excluir(registro);
             return conseguiuExcluir;
         }
 
         public bool EditarRegistro(T registro)
         {
             bool conseguiuEditar = false;
-            conseguiuEditar = true;
-            AbrirBanco();
-            ObterComandoEditar(registro);
-            FecharBanco();
+            Editar(registro);
             return conseguiuEditar;
         }
 
         public List<T> SelecionarTodosRegistros()
         {
             List<T> registros = new List<T>();
-            AbrirBanco();
-            registros = ObterComandoSelecionarTodos();
-            FecharBanco();
+            registros = SelecionarTodos();
             return registros;
         }
 
-        public abstract List<T> ObterComandoSelecionarTodos();
+        public abstract List<T> SelecionarTodos();
 
-        public abstract void ObterComandoInserir(T registro);
+        public abstract void Inserir(T registro);
 
-        public abstract void ObterComandoEditar(T registro);
+        public abstract void Editar(T registro);
 
-        public abstract void ObterComandoExcluir(int id);
+        public abstract void Excluir(T registro);
 
         public string RetirarEspacos(string registroEntrada)
         {
@@ -77,39 +63,9 @@ namespace E_Agenda1._5._0.Controlador
 
             return registroSaida;
         }
-
-        static string ObterEnderecoBanco()
+        protected Dictionary<string, object> AdicionarParametro(string campo, object valor)
         {
-            return ConfigurationManager.ConnectionStrings["Default"].ConnectionString;
-        }
-        public void AbrirBanco()
-        {
-            if (ObterTipoBanco().Equals("SQL"))
-                conexaoComBancoAgendaSql.Open();
-            else
-                conexaoComBancoAgendaSqlite.Open();
-        }
-        public void FecharBanco()
-        {
-            if (ObterTipoBanco().Equals("SQL"))
-                conexaoComBancoAgendaSql.Close();
-            else
-                conexaoComBancoAgendaSqlite.Close();
-        }
-
-        public SqlConnection ObterConexaoSql()
-        {
-            return conexaoComBancoAgendaSql;
-        }
-
-        public SQLiteConnection ObterConexaoSqlite()
-        {
-            return conexaoComBancoAgendaSqlite;
-        }
-
-        private string ObterTipoBanco()
-        {
-            return ConfigurationManager.ConnectionStrings["Default"].ProviderName;
+            return new Dictionary<string, object>() { { campo, valor } };
         }
 
     }

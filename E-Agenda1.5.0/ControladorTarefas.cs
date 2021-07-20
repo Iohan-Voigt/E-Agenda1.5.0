@@ -1,390 +1,160 @@
-﻿using Dapper;
-using System;
+﻿using System;
 using System.Data;
-using System.Data.SqlClient;
-using System.Data.SQLite;
 using System.Collections.Generic;
 using E_Agenda1._5._0.Dominio;
-using System.Configuration;
 
 namespace E_Agenda1._5._0.Controlador
 {
     public class ControladorTarefa : ControladorBase<Tarefa>
     {
-        public override void ObterComandoInserir(Tarefa registro)
-        {
-            string InserirCommand = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                InserirCommand =
-                    @"INSERT INTO TBTAREFAS
+
+        #region Querryes
+
+        private const string inserirTarefa =
+            @"INSERT INTO [TBTAREFAS]
                 (
                     [TITULO],
                     [PRIORIDADE],
-                    [DATAABERTURA],
+                    [DataAbertura],
                     [PERCENTUALCONCLUSAO]             
                 )
                 VALUES
                 (
                     @TITULO,
                     @PRIORIDADE,
-                    @DATAABERTURA,
+                    @DataAbertura,
                     @PERCENTUALCONCLUSAO
                 );";
-                InserirCommand += @"SELECT SCOPE_IDENTITY();";
-                SqlCommand comando = new SqlCommand(InserirCommand, ObterConexaoSql());
-                comando.Parameters.Add("TITULO", registro.titulo);
-                comando.Parameters.Add("PRIORIDADE", registro.prioridade);
-                comando.Parameters.Add("DATAABERTURA", registro.dataAbertura);
-                comando.Parameters.Add("PERCENTUALCONCLUSAO", registro.percentualConclusao);
-
-                comando.ExecuteNonQuery();
-
-            }
-            else
-            {
-                InserirCommand =
-                    @"insert into TbTarefas (Titulo,Prioridade,DataAbertura,PercentualConclusao)
-                    VALUES
-                    (@Titulo,@Prioridade,@DataAbertura,@PercentualConclusao);";
-                InserirCommand += @"SELECT LAST_INSERT_ROWID();";
-                SQLiteCommand comando = new SQLiteCommand(InserirCommand, ObterConexaoSqlite());
-                ObterConexaoSqlite().Execute(InserirCommand, registro);
-            }
-
-        }
-
-        public override void ObterComandoEditar(Tarefa registro)
-        {
-            string EditarCommand = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                EditarCommand =
-                @"UPDATE TBTAREFAS
-                    SET
-                    [TITULO] = @TITULO,
-                    [PRIORIDADE] = @PRIORIDADE,
-                    [DataAbertura] = @DataAbertura,
-                    [PERCENTUALCONCLUSAO] = @PERCENTUALCONCLUSAO            
+        private const string editarTarefa =
+            @"UPDATE TBTAREFAS
+                SET
+                [TITULO] = @TITULO,
+                [PRIORIDADE] = @PRIORIDADE,
+                [PercentualConclusao] = @PercentualConclusao            
                 WHERE
                 [ID] = @ID;";
-                SqlCommand comandoEdicao = new SqlCommand(EditarCommand, ObterConexaoSql());
-                comandoEdicao.Parameters.Add("TITULO", registro.titulo);
-                comandoEdicao.Parameters.Add("PRIORIDADE", registro.prioridade);
-                comandoEdicao.Parameters.Add("DataAbertura", registro.dataAbertura);
-                comandoEdicao.Parameters.Add("PERCENTUALCONCLUSAO", registro.percentualConclusao);
-                comandoEdicao.Parameters.Add("ID", registro.id);
-                comandoEdicao.ExecuteNonQuery();
-            }
-            else
-            {
-                EditarCommand =
-                @"UPDATE TbTarefas
-                    SET
-                    (Titulo) = @TITULO,
-                    (Prioridade) = @PRIORIDADE,
-                    (DataAbertura) = @DataAbertura,
-                    (PercentualConclusao) = @PERCENTUALCONCLUSAO            
+        private const string excluirTarefa =
+            @"DELETE FROM TBTAREFAS
                     WHERE
-                    (ID) = @ID";
-                SQLiteCommand comandoEdicao = new SQLiteCommand(EditarCommand, ObterConexaoSqlite());
-                ObterConexaoSqlite().Execute(EditarCommand, registro);
-            }
-
-        }
-        public override void ObterComandoExcluir(int id)
-        {
-            string ExcluirCommand = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                ExcluirCommand =
-                @"DELETE FROM TBTAREFAS
-                    WHERE
-                    [ID] = @ID";
-                SqlCommand comandoExclusao = new SqlCommand(ExcluirCommand, ObterConexaoSql());
-                comandoExclusao.Parameters.Add("ID", id);
-                comandoExclusao.ExecuteNonQuery();
-            }
-            else
-            {
-                ExcluirCommand =
-                    @"DELETE FROM TbTarefas
-                WHERE
-                (Id) = @Id;";
-                SQLiteCommand comandoExclusao = new SQLiteCommand(ExcluirCommand, ObterConexaoSqlite());
-                ObterConexaoSqlite().Execute(ExcluirCommand, id);
-
-            }
-        }
-        public override List<Tarefa> ObterComandoSelecionarTodos()
-        {
-            string comandoSelect = "";
-            List<Tarefa> registros = new List<Tarefa>();
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                comandoSelect = "SELECT * FROM TbTarefas;";
-                SqlCommand comandoSelecionarTodos = new SqlCommand(comandoSelect);
-
-                DataTable dataTable = new DataTable(comandoSelect);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelect, ObterConexaoSql());
-
-                int nPI = sqlDataAdapter.Fill(dataTable);
-                string nPI2 = dataSet.ToString();
-
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Tarefa tr = new Tarefa();
-                    tr.id = Convert.ToInt32(row[0]);
-                    tr.titulo = row.Field<string>("titulo");
-                    tr.dataAbertura = row.Field<DateTime>("DataAbertura");
-                    if (tr.dataConclusao == null)
-                    {
-                        tr.dataConclusao = row.Field<DateTime>("DataConclusao");
-                    }
-                    tr.prioridade = Convert.ToInt32(row[2]);
-                    tr.percentualConclusao = Convert.ToInt32(row[5]);
-                    registros.Add(tr);
-                }
-            }
-            else
-            {
-                comandoSelect = "SELECT * FROM TbTarefas;";
-                SQLiteCommand ComandoSelecionartodos = new SQLiteCommand(comandoSelect, ObterConexaoSqlite());
-
-
-                DataTable dataTable = new DataTable(comandoSelect);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelect, ObterConexaoSql());
-
-                int nPI = sqlDataAdapter.Fill(dataTable);
-                string nPI2 = dataSet.ToString();
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Tarefa tr = new Tarefa();
-                    tr.id = Convert.ToInt32(row[0]);
-                    tr.titulo = row.Field<string>("titulo");
-                    tr.dataAbertura = row.Field<DateTime>("DataAbertura");
-                    if (tr.dataConclusao == null)
-                    {
-                        tr.dataConclusao = row.Field<DateTime>("DataConclusao");
-                    }
-                    tr.prioridade = Convert.ToInt32(row[2]);
-                    tr.percentualConclusao = Convert.ToInt32(row[5]);
-                    registros.Add(tr);
-                }
-            }
-
-            return registros;
-
-        }
-        public Tarefa ObterIdPorTitulo(Tarefa registro)
-        {
-            string comandoSelect = "SELECT * FROM TbTarefas WHERE [Titulo] = " + registro.titulo + ";";
-
-            DataTable dataTable = new DataTable(comandoSelect);
-            DataSet dataSet = new DataSet();
-            SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelect, ObterConexaoSql());
-
-            int nPI = sqlDataAdapter.Fill(dataTable);
-            string nPI2 = dataSet.ToString();
-
-            registro.id = Convert.ToInt32(dataTable.Rows[0]);
-
-            return registro;
-        }
-        public void ConcluirTarefa(int id)
-        {
-            AbrirBanco();
-            string EditarCommand = "";
-
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                EditarCommand =
-                @"UPDATE TBTAREFAS
+                    [ID] = @ID;";
+        private const string selecionarTodosOsRegistros =
+            @"SELECT * FROM [TbTarefas];";
+        private const string obterIdPorTitulo =
+            "SELECT * FROM[TBTAREFAS] WHERE [TITULO] = @TITULO;";
+        private const string concluirTarefa =
+            @"UPDATE TBTAREFAS
                     SET                    
                     [DATACONCLUSAO] = @DATACONCLUSAO,
                     [PercentualConclusao] = @PercentualConclusao
                 WHERE
-                [ID] = @ID";
-                SqlCommand comandoConcluirTareda = new SqlCommand(EditarCommand, ObterConexaoSql());
-                comandoConcluirTareda.CommandText = EditarCommand;
-                comandoConcluirTareda.Parameters.Add("DATACONCLUSAO", DateTime.Today);
-                comandoConcluirTareda.Parameters.Add("PercentualConclusao", 100);
-                comandoConcluirTareda.Parameters.Add("ID", id);
-                comandoConcluirTareda.ExecuteNonQuery();
-            }
-            else
-            {
-                EditarCommand =
-                @"UPDATE TbTarefas
-                    SET
-                    (DATACONCLUSAO) = @DATACONCLUSAO,
-                    (PercentualConclusao) = 100           
-                    WHERE
-                    (ID) = @ID";
-                SQLiteCommand comandoEdicao = new SQLiteCommand(EditarCommand, ObterConexaoSqlite());
-                DynamicParameters param = new DynamicParameters();
-                param.Add("DATACONCLUSAO", DateTime.Now);
-                param.Add("Id", id);
-                ObterConexaoSqlite().Execute(EditarCommand, param);
-            }
+                [ID] = @ID;";
+        private const string editarPorcentagem =
+            @"UPDATE TBTAREFAS SET
+              [PERCENTUALCONCLUSAO] = @PERCENTUALCONCLUSAO
+              WHERE [ID] = @ID;";
+        private const string selecionarTodosAbertos =
+            "select * from TbTarefas where PercentualConclusao < 100;";
+        private const string selecionarTodosFechados =
+            "select * from TbTarefas where PercentualConclusao >= 100;";
+        private const string selecionarIdPorTitulo =
+            "select [ID] FROM [TbTarefas] where [Titulo] = @Titulo;";
+        private const string selecionarTarefaPorId =
+            "select * from [TbTarefas] where [ID] = @ID;";
 
-            FecharBanco();
-        }
-        public void EditarPorcentagem(int id, int porcentagem)
+        #endregion
+
+        public override void Inserir(Tarefa registro)
         {
-            AbrirBanco();
-            string EditarPorcentagem = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-
-                EditarPorcentagem = @"UPDATE TBTAREFAS SET
-                                                [PERCENTUALCONCLUSAO] = @PERCENTUALCONCLUSAO
-                                                WHERE [ID] = @ID;";
-                SqlCommand comandoEditarPorcentagem = new SqlCommand(EditarPorcentagem, ObterConexaoSql());
-                comandoEditarPorcentagem.Parameters.Add("PERCENTUALCONCLUSAO", porcentagem);
-                comandoEditarPorcentagem.Parameters.Add("ID", id);
-                comandoEditarPorcentagem.ExecuteNonQuery();
-            }
+            Db.Inserir(inserirTarefa, ObtemParametrosTarefa(registro));
+        }
+        public override void Editar(Tarefa registro)
+        {
+            Db.Atualizar(editarTarefa, ObtemParametrosTarefa(registro));
+        }
+        public override void Excluir(Tarefa registro)
+        {
+            Db.Deletar(excluirTarefa, AdicionarParametro("ID", registro.id));
+        }
+        public override List<Tarefa> SelecionarTodos()
+        {
+           return Db.SelecionarTodos(selecionarTodosOsRegistros, ConverteEmTarefa);
+        }
+        public void ConcluirTarefa(Tarefa registro)
+        {
+            registro.percentualConclusao = 100;
+            registro.dataConclusao = DateTime.Now;
+            Db.Atualizar(concluirTarefa, ObtemParametrosTarefaConcluirTarefa(registro));
+        }
+        public void EditarPorcentagem(Tarefa registro)
+        {
+            registro = SelecionarTarefaPorId(registro);
+            if (registro.percentualConclusao == 100)
+                ConcluirTarefa(registro);
             else
-            {
-                EditarPorcentagem = @"UPDATE TBTAREFAS SET
-                                                (PERCENTUALCONCLUSAO) = @PERCENTUALCONCLUSAO
-                                                WHERE (ID) = @ID;";
-                SQLiteCommand comandoEditarPorcentagem = new SQLiteCommand(EditarPorcentagem);
-                DynamicParameters param = new DynamicParameters();
-                param.Add("PERCENTUALCONCLUSAO", porcentagem);
-                param.Add("Id", id);
-                ObterConexaoSqlite().Execute(EditarPorcentagem, param);
-
-            }
-
-            FecharBanco();
+                Db.Atualizar(editarPorcentagem, ObtemParametrosTarefa(registro));
         }
         public List<Tarefa> ObterComandoSelecionarAbertos()
         {
-            AbrirBanco();
-            List<Tarefa> registros = new List<Tarefa>();
-            string comandoSelect = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                comandoSelect = "select * from TbTarefas where PercentualConclusao < 100;";
-                SqlCommand comandoSelecionarAbertos = new SqlCommand(comandoSelect);
-
-                DataTable dataTable = new DataTable(comandoSelect);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelect, ObterConexaoSql());
-                int asds = sqlDataAdapter.Fill(dataTable);
-                string asd = dataSet.ToString();
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Tarefa tr = new Tarefa();
-                    tr.id = Convert.ToInt32(row[0]);
-                    tr.titulo = row.Field<string>("titulo");
-                    tr.dataAbertura = row.Field<DateTime>("DataAbertura");
-                    if (tr.dataConclusao == null)
-                    {
-                        tr.dataConclusao = row.Field<DateTime>("DataConclusao");
-                    }
-                    tr.prioridade = Convert.ToInt32(row[2]);
-                    tr.percentualConclusao = Convert.ToInt32(row[5]);
-                    registros.Add(tr);
-                }
-            }
-            else
-            {
-                comandoSelect = "select * from TbTarefas where PercentualConclusao < 100;";
-                SQLiteCommand comandoSelecionarAbertos = new SQLiteCommand(comandoSelect);
-
-                DataTable dataTable = new DataTable(comandoSelect);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelect, ObterConexaoSql());
-                int asds = sqlDataAdapter.Fill(dataTable);
-                string asd = dataSet.ToString();
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Tarefa tr = new Tarefa();
-                    tr.id = Convert.ToInt32(row[0]);
-                    tr.titulo = row.Field<string>("titulo");
-                    tr.dataAbertura = row.Field<DateTime>("DataAbertura");
-                    if (tr.dataConclusao == null)
-                    {
-                        tr.dataConclusao = row.Field<DateTime>("DataConclusao");
-                    }
-                    tr.prioridade = Convert.ToInt32(row[2]);
-                    tr.percentualConclusao = Convert.ToInt32(row[5]);
-                    registros.Add(tr);
-                }
-            }
-            FecharBanco();
-            return registros;
+            return Db.SelecionarTodos(selecionarTodosAbertos,ConverteEmTarefa);
         }
         public List<Tarefa> ObterComandoSelecionarFechados()
         {
-            AbrirBanco();
-            List<Tarefa> registros = new List<Tarefa>();
-            string comandoSelect = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                comandoSelect = "select * from TbTarefas where PercentualConclusao = 100;";
-                SqlCommand comandoSelecionarAbertos = new SqlCommand(comandoSelect);
-
-                DataTable dataTable = new DataTable(comandoSelect);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelect, ObterConexaoSql());
-                int asds = sqlDataAdapter.Fill(dataTable);
-                string asd = dataSet.ToString();
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Tarefa tr = new Tarefa();
-                    tr.id = Convert.ToInt32(row[0]);
-                    tr.titulo = row.Field<string>("titulo");
-                    tr.dataAbertura = row.Field<DateTime>("DataAbertura");
-                    if (tr.dataConclusao == null)
-                    {
-                        tr.dataConclusao = row.Field<DateTime>("DataConclusao");
-                    }
-                    tr.prioridade = Convert.ToInt32(row[2]);
-                    tr.percentualConclusao = Convert.ToInt32(row[5]);
-                    registros.Add(tr);
-                }
-            }
-            else
-            {
-                comandoSelect = "select * from TbTarefas where PercentualConclusao = 100;";
-                SQLiteCommand comandoSelecionarAbertos = new SQLiteCommand(comandoSelect);
-
-                DataTable dataTable = new DataTable(comandoSelect);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelect, ObterConexaoSql());
-                int asds = sqlDataAdapter.Fill(dataTable);
-                string asd = dataSet.ToString();
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Tarefa tr = new Tarefa();
-                    tr.id = Convert.ToInt32(row[0]);
-                    tr.titulo = row.Field<string>("titulo");
-                    tr.dataAbertura = row.Field<DateTime>("DataAbertura");
-                    if (tr.dataConclusao == null)
-                    {
-                        tr.dataConclusao = row.Field<DateTime>("DataConclusao");
-                    }
-                    tr.prioridade = Convert.ToInt32(row[2]);
-                    tr.percentualConclusao = Convert.ToInt32(row[5]);
-                    registros.Add(tr);
-                }
-            }
-            FecharBanco();
-            return registros;
-
+            return Db.SelecionarTodos(selecionarTodosFechados, ConverteEmTarefa);
         }
+        public int ObterIdPorTitulo(Tarefa registro) 
+        {
+            var t = Db.Selecionar(obterIdPorTitulo, ConverteEmTarefa, AdicionarParametro("Titulo", registro.titulo));
+            return t.id;
+        }
+        public Tarefa SelecionarTarefaPorId(Tarefa registro)
+        {
+            return Db.Selecionar(selecionarTarefaPorId,ConverteEmTarefa, AdicionarParametro("ID", registro.id));
+        }
+        #region Métodos Privados
+        private Dictionary<string, object> ObtemParametrosTarefa(Tarefa tarefa)
+        {
+            var parametros = new Dictionary<string, object>();
+            if (tarefa.id != 0)
+            parametros.Add("ID", tarefa.id);
+            parametros.Add("TITULO", tarefa.titulo);
+            parametros.Add("PRIORIDADE", tarefa.prioridade);
+            parametros.Add("DataAbertura", tarefa.dataAbertura);
+            parametros.Add("PercentualConclusao", tarefa.percentualConclusao);
+
+            return parametros;
+        }
+        private Dictionary<string, object> ObtemParametrosTarefaConcluirTarefa(Tarefa tarefa)
+        {
+            var parametros = new Dictionary<string, object>();
+            if (tarefa.id != 0)
+                parametros.Add("ID", tarefa.id);
+            parametros.Add("DataConclusao", tarefa.dataConclusao);
+            parametros.Add("PercentualConclusao", tarefa.percentualConclusao);
+
+            return parametros;
+        }
+        private Tarefa ConverteEmTarefa(IDataReader reader)
+        {
+            var id = Convert.ToInt32(reader["ID"]);
+            var titulo = Convert.ToString(reader["TITULO"]);
+            var percentualConclusao = Convert.ToInt32(reader["PERCENTUALCONCLUSAO"]);
+            var dataAbertura = Convert.ToDateTime(reader["DATAABERTURA"]);
+            var dataConclusao = DateTime.MinValue;
+
+            if (reader["DATACONCLUSAO"] != DBNull.Value)
+                dataConclusao = Convert.ToDateTime(reader["DATACONCLUSAO"]);
+
+            Tarefa tarefa = new Tarefa();
+
+            tarefa.id = id;
+            tarefa.titulo = titulo;
+            tarefa.percentualConclusao = percentualConclusao;
+            tarefa.dataAbertura = dataAbertura;
+            tarefa.dataConclusao = dataConclusao;
+
+            return tarefa;
+        }
+        #endregion
     }
 }
 

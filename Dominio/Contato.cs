@@ -4,6 +4,16 @@ namespace E_Agenda1._5._0.Dominio
 {
     public class Contato
     {
+        public Contato(string nome, long telefone, string email, string empresa, string cargo)
+        {
+            this.nome = nome;
+            this.telefone = telefone;
+            this.email = email;
+            this.empresa = empresa;
+            this.cargo = cargo;
+        }
+
+        public Contato() { }
 
         public int id { get; set; }
         public string nome { get; set; }

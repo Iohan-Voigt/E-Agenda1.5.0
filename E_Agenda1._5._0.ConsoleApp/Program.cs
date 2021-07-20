@@ -4,8 +4,9 @@ using E_Agenda1._5._0.Tela;
 
 namespace E_Agenda1._5._0.ConsoleApp
 {
-    //Medida de horas trabalhadas =~ 37hrs
-    //Refatorar o código;
+    //Medida de horas trabalhadas =~ 34hrs
+    // Corrigir banco;
+    // Na próxima pegar o código do Rech, pq foi triste refatorar para o esquema do DB universal :/
     //Implementar sistema de exception para caso o banco não funcione;
     class Program
     {

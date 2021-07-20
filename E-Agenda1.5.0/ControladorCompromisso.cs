@@ -11,84 +11,9 @@ namespace E_Agenda1._5._0.Controlador
 {
     public class ControladorCompromisso : ControladorBase<Compromisso>
     {
-        public override void ObterComandoEditar(Compromisso registro)
-        {
-
-            string EditarCommand = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                EditarCommand =
-               @"UPDATE TbCompromissos
-                    SET
-                    [Assunto] = @Assunto,
-                    [Local] = @Local,
-                    [Id_Contato] = @Id_Contato,
-                    [DataInicio] = @DataInicio,
-                    [DataFinal] = @DataFinal
-                WHERE
-                [ID] = @ID";
-                SqlCommand comandoEdicao = new SqlCommand(EditarCommand, ObterConexaoSql());
-
-                comandoEdicao.CommandText = EditarCommand;
-                comandoEdicao.Parameters.Add("Assunto", registro.assunto);
-                comandoEdicao.Parameters.Add("Local", registro.local);
-                comandoEdicao.Parameters.Add("Id_Contato", registro.contato.id);
-                comandoEdicao.Parameters.Add("DataInicio", registro.dataInicio);
-                comandoEdicao.Parameters.Add("DataFinal", registro.dataFinal);
-                comandoEdicao.Parameters.Add("ID", registro.id);
-
-                comandoEdicao.ExecuteNonQuery();
-            }
-            else
-            {
-                EditarCommand =
-                @"UPDATE TbCompromissos
-                    SET
-                    [Assunto] = @Assunto,
-                    [Local] = @Local,
-                    [Id_Contato] = @Id_Contato,
-                    [DataInicio] = @DataInicio,
-                    [DataFinal] = @DataFinal
-                WHERE
-                [ID] = @ID";
-                SQLiteCommand comandoEdicao = new SQLiteCommand(EditarCommand, ObterConexaoSqlite());
-                ObterConexaoSqlite().Execute(EditarCommand, registro);
-            }
-        }
-        public override void ObterComandoExcluir(int id)
-        {
-            string ExcluirCommand = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                ExcluirCommand =
-                @"DELETE FROM TBCOMPROMISSOS
-                    WHERE
-                    [id] = @id;";
-                SqlCommand comandoExclusao = new SqlCommand(ExcluirCommand, ObterConexaoSql());
-                comandoExclusao.CommandText = ExcluirCommand;
-
-                comandoExclusao.Parameters.Add("ID", id);
-                comandoExclusao.ExecuteNonQuery();
-            }
-            else
-            {
-                ExcluirCommand =
-                    @"DELETE FROM TbCompromissos
-                    WHERE
-                    (Id) = @Id;";
-                SQLiteCommand comandoExclusao = new SQLiteCommand(ExcluirCommand, ObterConexaoSqlite());
-                ObterConexaoSqlite().Execute(ExcluirCommand, id);
-            }
-
-        }
-        public override void ObterComandoInserir(Compromisso registro)
-        {
-            int possuicontato = 0;
-            string InserirCommand;
-            if (registro.contato == null)
-            {
-                InserirCommand =
-                    @"INSERT INTO TbCompromissos
+        #region Querryes
+        private const string inserirCompromissoSemContato =
+            @"INSERT INTO [TbCompromissos]
                 (
                     [Assunto],
                     [Local],
@@ -102,13 +27,8 @@ namespace E_Agenda1._5._0.Controlador
                     @DataInicio,
                     @DataFinal
                 );";
-                InserirCommand += @"SELECT SCOPE_IDENTITY();";
-            }
-            else
-            {
-                possuicontato = 1;
-                InserirCommand =
-                       @"INSERT INTO TbCompromissos
+        private const string inserirCompromissoComContato =
+            @"INSERT INTO [TbCompromissos]
                 (
                     [Assunto],
                     [Local],
@@ -124,204 +44,121 @@ namespace E_Agenda1._5._0.Controlador
                     @DataInicio,
                     @DataFinal
                 );";
-                InserirCommand += @"SELECT LAST_INSERT_ROWID();";
-            }
+        private const string selecionarTodosCompromissos =
+            "SELECT * FROM [TbCompromissos];";
+        private const string selecionarCompromissosFuturos =
+            "SELECT * FROM [TbCompromissos] where SYSDATETIME() < [dataInicio];";
+        private const string selecionarCompromissosPassados =
+            "SELECT * FROM [TbCompromissos] where SYSDATETIME() > [dataInicio];";
+        private const string editarCompromissosComContato =
+            @"UPDATE [TbCompromissos]
+                    SET
+                    [Assunto] = @Assunto,
+                    [Local] = @Local,
+                    [Id_Contato] = @Id_Contato,
+                    [DataInicio] = @DataInicio,
+                    [DataFinal] = @DataFinal
+                WHERE
+                [ID] = @ID;";
+        private const string editarCompromissosSemContato =
+            @"UPDATE [TbCompromissos]
+                    SET
+                    [Assunto] = @Assunto,
+                    [Local] = @Local,
+                    [DataInicio] = @DataInicio,
+                    [DataFinal] = @DataFinal
+                WHERE
+                [ID] = @ID;";
+        private const string excluirCompromisso =
+            @"DELETE FROM [TBCOMPROMISSOS]
+                    WHERE
+                    [ID] = @ID;";
+        private const string obterIdCompromissoPorAssunto =
+            "SELECT * FROM [TBCOMPROMISSOS] WHERE [ASSUNTO] = @ASSUNTO;";
 
-            SqlCommand comandoInsercao = new SqlCommand(InserirCommand, ObterConexaoSql());
+        #endregion
 
-            comandoInsercao.CommandText = InserirCommand;
-
-            comandoInsercao.Parameters.Add("Assunto", registro.assunto);
-            comandoInsercao.Parameters.Add("Local", registro.local);
-
-            if (possuicontato == 1)
-                comandoInsercao.Parameters.Add("Id_Contato", registro.contato.id);
-
-            comandoInsercao.Parameters.Add("DataInicio", registro.dataInicio);
-            comandoInsercao.Parameters.Add("DataFinal", registro.dataFinal);
-
-
-            comandoInsercao.ExecuteNonQuery();
-        }
-        public override List<Compromisso> ObterComandoSelecionarTodos()
+        public override void Editar(Compromisso registro)
         {
-            string comandoSelectComand = "";
-            List<Compromisso> compromisso = new List<Compromisso>();
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                comandoSelectComand = "SELECT * FROM TbCompromissos";
-
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-                sqlDataAdapter.Fill(dataTable);
-                dataSet.ToString();
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Compromisso cp = new Compromisso();
-                    cp.id = Convert.ToInt32(row[0]);
-                    cp.assunto = RetirarEspacos(row.Field<string>("Assunto"));
-                    cp.local = RetirarEspacos(row.Field<string>("Local"));
-                    var idContato = row[3];
-                    if (idContato == null)
-                        cp.contato.id = Convert.ToInt32(idContato);
-
-                    cp.dataInicio = Convert.ToDateTime(row.Field<DateTime>("DataInicio"));
-                    cp.dataFinal = Convert.ToDateTime(row.Field<DateTime>("DataFinal"));
-
-                    compromisso.Add(cp);
-                }
-            }
+            if(registro.contato != null)
+                Db.Atualizar(editarCompromissosComContato,ObtemParametrosCompromisso(registro));
             else
-            {
-                comandoSelectComand = "SELECT * FROM TbTarefas;";
-                SQLiteCommand ComandoSelecionartodos = new SQLiteCommand(comandoSelectComand, ObterConexaoSqlite());
-
-
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-
-                int nPI = sqlDataAdapter.Fill(dataTable);
-                string nPI2 = dataSet.ToString();
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Compromisso cp = new Compromisso();
-                    cp.id = Convert.ToInt32(row[0]);
-                    cp.assunto = RetirarEspacos(row.Field<string>("Assunto"));
-                    cp.local = RetirarEspacos(row.Field<string>("Local"));
-                    var idContato = row[3];
-                    if (idContato == null)
-                        cp.contato.id = Convert.ToInt32(idContato);
-
-                    cp.dataInicio = Convert.ToDateTime(row.Field<DateTime>("DataInicio"));
-                    cp.dataFinal = Convert.ToDateTime(row.Field<DateTime>("DataFinal"));
-
-                    compromisso.Add(cp);
-                }
-            }
-            return compromisso;
+                Db.Atualizar(editarCompromissosSemContato, ObtemParametrosCompromisso(registro));
+        }
+        public override void Excluir(Compromisso registro)
+        {
+            Db.Deletar(excluirCompromisso, AdicionarParametro("ID", registro.id));
+        }
+        public override void Inserir(Compromisso registro)
+        {
+            if(registro.contato == null)
+                Db.Inserir(inserirCompromissoSemContato, ObtemParametrosCompromisso(registro));
+            else
+                Db.Inserir(inserirCompromissoComContato, ObtemParametrosCompromisso(registro));
+        }
+        public override List<Compromisso> SelecionarTodos()
+        {  
+            return Db.SelecionarTodos(selecionarTodosCompromissos,ConverteEmCompromisso);
         }
         public List<Compromisso> selecionarTodosRegistrosFuturo()
         {
-            string comandoSelectComand = "";
-            List<Compromisso> compromisso = new List<Compromisso>();
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                comandoSelectComand = "SELECT * FROM TbCompromissos where SYSDATETIME() < [dataInicio];";
-
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-                sqlDataAdapter.Fill(dataTable);
-                dataSet.ToString();
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Compromisso cp = new Compromisso();
-                    cp.id = Convert.ToInt32(row[0]);
-                    cp.assunto = RetirarEspacos(row.Field<string>("Assunto"));
-                    cp.local = RetirarEspacos(row.Field<string>("Local"));
-                    var idContato = row[3];
-                    if (idContato == null)
-                        cp.contato.id = Convert.ToInt32(idContato);
-
-                    cp.dataInicio = Convert.ToDateTime(row.Field<DateTime>("DataInicio"));
-                    cp.dataFinal = Convert.ToDateTime(row.Field<DateTime>("DataFinal"));
-
-                    compromisso.Add(cp);
-                }
-            }
-            else
-            {
-                comandoSelectComand = "SELECT * FROM TbTarefas WHERE [DataInicio] < date('now');";
-                SQLiteCommand ComandoSelecionartodos = new SQLiteCommand(comandoSelectComand, ObterConexaoSqlite());
-
-
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-
-                int nPI = sqlDataAdapter.Fill(dataTable);
-                string nPI2 = dataSet.ToString();
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Compromisso cp = new Compromisso();
-                    cp.id = Convert.ToInt32(row[0]);
-                    cp.assunto = RetirarEspacos(row.Field<string>("Assunto"));
-                    cp.local = RetirarEspacos(row.Field<string>("Local"));
-                    var idContato = row[3];
-                    if (idContato == null)
-                        cp.contato.id = Convert.ToInt32(idContato);
-
-                    cp.dataInicio = Convert.ToDateTime(row.Field<DateTime>("DataInicio"));
-                    cp.dataFinal = Convert.ToDateTime(row.Field<DateTime>("DataFinal"));
-
-                    compromisso.Add(cp);
-                }
-            }
-            return compromisso;
+            return Db.SelecionarTodos(selecionarCompromissosFuturos, ConverteEmCompromisso);
         }
         public List<Compromisso> SelecionarTodosRegistrosPassados()
         {
-            string comandoSelectComand = "";
-            List<Compromisso> compromisso = new List<Compromisso>();
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
+            return Db.SelecionarTodos(selecionarCompromissosPassados,ConverteEmCompromisso);
+        }
+        public int ObterIdContatoPorAssunto(Compromisso registro)
+        {
+            var t=Db.Selecionar(obterIdCompromissoPorAssunto,ConverteEmCompromisso,AdicionarParametro("ASSUNTO",registro.assunto));
+            return t.id;
+        }
+
+        #region Métodos privados
+        private Dictionary<string, object> ObtemParametrosCompromisso(Compromisso compromisso)
+        {
+            var parametros = new Dictionary<string, object>();
+            if (compromisso.id != 0)
+                parametros.Add("ID", compromisso.id);
+            parametros.Add("ASSUNTO", compromisso.assunto);
+            parametros.Add("LOCAL", compromisso.local);
+            if(compromisso.contato != null)
+            parametros.Add("ID_CONTATO", compromisso.contato.id);
+            parametros.Add("DATAINICIO", compromisso.dataInicio);
+            parametros.Add("DATAFINAL", compromisso.dataFinal);
+
+            return parametros;
+        }
+        private Compromisso ConverteEmCompromisso(IDataReader reader)
+        {
+            Compromisso compromisso = new Compromisso();
+            ControladorContatos ctr = new ControladorContatos();
+
+            Contato contato = new Contato();
+
+            var id = Convert.ToInt32(reader["ID"]);
+            var assunto = Convert.ToString(reader["ASSUNTO"]);
+            var local = Convert.ToString(reader["LOCAL"]);
+            var dataInicio = Convert.ToDateTime(reader["DATAINICIO"]);
+            var dataFinal = Convert.ToDateTime(reader["DATAFINAL"]);
+
+            if (reader["ID_CONTATO"] != DBNull.Value)
             {
-                comandoSelectComand = "SELECT * FROM TbCompromissos where SYSDATETIME() > [dataInicio];";
-
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-                sqlDataAdapter.Fill(dataTable);
-                dataSet.ToString();
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Compromisso cp = new Compromisso();
-                    cp.id = Convert.ToInt32(row[0]);
-                    cp.assunto = RetirarEspacos(row.Field<string>("Assunto"));
-                    cp.local = RetirarEspacos(row.Field<string>("Local"));
-                    var idContato = row[3];
-                    if (idContato == null)
-                        cp.contato.id = Convert.ToInt32(idContato);
-
-                    cp.dataInicio = Convert.ToDateTime(row.Field<DateTime>("DataInicio"));
-                    cp.dataFinal = Convert.ToDateTime(row.Field<DateTime>("DataFinal"));
-
-                    compromisso.Add(cp);
-                }
+                var idc = Convert.ToInt32(reader["ID_CONTATO"]);
+                contato.id = idc;
+                contato = ctr.ObterContatoPorId(contato);
+                contato.id = idc;
             }
-            else
-            {
-                comandoSelectComand = "SELECT * FROM TbTarefas WHERE [DataInicio] > date('now');";
-                SQLiteCommand ComandoSelecionartodos = new SQLiteCommand(comandoSelectComand, ObterConexaoSqlite());
 
+            compromisso.id = id;
+            compromisso.assunto = assunto;
+            compromisso.local = local;
+            compromisso.contato = contato;
+            compromisso.dataInicio = dataInicio;
+            compromisso.dataFinal = dataFinal;
 
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-
-                int nPI = sqlDataAdapter.Fill(dataTable);
-                string nPI2 = dataSet.ToString();
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Compromisso cp = new Compromisso();
-                    cp.id = Convert.ToInt32(row[0]);
-                    cp.assunto = RetirarEspacos(row.Field<string>("Assunto"));
-                    cp.local = RetirarEspacos(row.Field<string>("Local"));
-                    var idContato = row[3];
-                    if (idContato == null)
-                        cp.contato.id = Convert.ToInt32(idContato);
-
-                    cp.dataInicio = Convert.ToDateTime(row.Field<DateTime>("DataInicio"));
-                    cp.dataFinal = Convert.ToDateTime(row.Field<DateTime>("DataFinal"));
-
-                    compromisso.Add(cp);
-                }
-            }
             return compromisso;
         }
+        #endregion
     }
 }

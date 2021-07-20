@@ -71,8 +71,10 @@ namespace E_Agenda1._5._0.Tela
             ListarTodosContatos();
             Console.Clear();
             Console.WriteLine("infore o id que deseja excluir");
-            controladorContatos.ExcluiRegistro(Convert.ToInt32(Console.ReadLine()));
-            Console.WriteLine("Excluidocom sucesso!");
+            Contato contato = new Contato();
+            contato.id = Convert.ToInt32(Console.ReadLine());
+            controladorContatos.ExcluiRegistro(contato);
+            Console.WriteLine("Excluido com sucesso!");
             Console.ReadLine();
         }
         public void ListarTodosContatos()

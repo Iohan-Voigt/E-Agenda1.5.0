@@ -125,7 +125,9 @@ namespace E_Agenda1._5._0.Tela
             ListarTodosCompromissos();
             Console.Clear();
             Console.WriteLine("infore o id que deseja excluir");
-            controladorCompromisso.ExcluiRegistro(Convert.ToInt32(Console.ReadLine()));
+            Compromisso compromisso = new Compromisso();
+            compromisso.id = Convert.ToInt32(Console.ReadLine());
+            controladorCompromisso.ExcluiRegistro(compromisso);
             Console.WriteLine("Excluidocom sucesso!");
             Console.ReadLine();
         }
@@ -192,8 +194,9 @@ namespace E_Agenda1._5._0.Tela
                         telaContatos.ListarTodosContatos();
                         Console.Clear();
                         Console.WriteLine("Informe o id do contato");
+                        contato.id = Convert.ToInt32(Console.ReadLine());
                         contato = telaContatos.controladorContatos.ObterContatoPeloId
-                            (Convert.ToInt32(Console.ReadLine()));
+                            (contato);
 
                     }
                     else

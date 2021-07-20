@@ -11,14 +11,26 @@ namespace E_Agenda1._5._0.Controlador
 {
     public class ControladorContatos : ControladorBase<Contato>
     {
-
-        public override void ObterComandoEditar(Contato registro)
-        {
-            string EditarCommand = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                EditarCommand =
-                @"UPDATE TbContatos
+        #region Querryes
+        private const string inserirContato =
+            @"INSERT INTO [TBCONTATOS]
+                (
+                    [NOME],
+                    [EMAIL],
+                    [TELEFONE],
+                    [EMPRESA],
+                    [CARGO]
+                )
+                VALUES
+                (
+                    @NOME,
+                    @EMAIL,
+                    @TELEFONE,
+                    @EMPRESA,
+                    @CARGO
+                );";
+        private const string editarContato =
+            @"UPDATE [TbContatos]
                     SET
                     [NOME] = @NOME,
                     [email] = @email,
@@ -27,200 +39,85 @@ namespace E_Agenda1._5._0.Controlador
                     [TELEFONE] = @TELEFONE
                 WHERE
                 [ID] = @ID;";
-                SqlCommand comandoEdicao = new SqlCommand(EditarCommand, ObterConexaoSql());
-
-                comandoEdicao.CommandText = EditarCommand;
-                comandoEdicao.Parameters.Add("NOME", registro.nome);
-                comandoEdicao.Parameters.Add("email", registro.email);
-                comandoEdicao.Parameters.Add("EMPRESA", registro.empresa);
-                comandoEdicao.Parameters.Add("CARGO", registro.cargo);
-                comandoEdicao.Parameters.Add("TELEFONE", registro.telefone);
-                comandoEdicao.Parameters.Add("ID", registro.id);
-
-                comandoEdicao.ExecuteNonQuery();
-            }
-            else
-            {
-                EditarCommand =
-                @"UPDATE TbContatos
-                    SET
-                    (NOME) = @NOME,
-                    (email) = @email,
-                    (EMPRESA) = @EMPRESA,
-                    (CARGO) = @CARGO,
-                    (TELEFONE) = @TELEFONE
-                WHERE
-                (ID) = @ID";
-
-                SQLiteCommand comandoEdicao = new SQLiteCommand(EditarCommand, ObterConexaoSqlite());
-                ObterConexaoSqlite().Execute(EditarCommand, registro);
-            }
-        }
-
-
-        public override void ObterComandoExcluir(int id)
-        {
-            string ExcluirCommand = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                ExcluirCommand =
-                @"DELETE FROM TBCONTATOS
+        private const string excluirContato =
+            @"DELETE FROM [TBCONTATOS]
                     WHERE
                     [id] = @id;";
-                SqlCommand comandoExclusao = new SqlCommand(ExcluirCommand, ObterConexaoSql());
-                comandoExclusao.CommandText = ExcluirCommand;
-
-                comandoExclusao.Parameters.Add("ID", id);
-                comandoExclusao.ExecuteNonQuery();
-            }
-            else
-            {
-                ExcluirCommand =
-                @"DELETE FROM TBCONTATOS
-                WHERE
-                (id) = @id;";
-
-                SQLiteCommand comandoExclusao = new SQLiteCommand(ExcluirCommand, ObterConexaoSqlite());
-                ObterConexaoSqlite().Execute(ExcluirCommand, id);
-            }
-        }
-        public override void ObterComandoInserir(Contato registro)
-
+        private const string selecionarTodosContatos =
+            @"SELECT * FROM [TbContatos];";
+        private const string selecionarTodosIdsContatos =
+            @"SELECT * FROM [TbContatos];";
+        private const string selecionarContatoPorId =
+            "SELECT * FROM TbContatos WHERE[Id] = @Id;";
+        private const string obterIdPorNome =
+            "SELECT * FROM [TBCONTATOS] WHERE [NOME] = @NOME;";
+        private const string obterContatoPorId =
+            "SELECT * FROM [TBCONTATOS] WHERE [ID] = @ID;";
+        #endregion
+        public override void Editar(Contato registro)
         {
-            string InserirCommand = "";
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                InserirCommand =
-                @"INSERT INTO TBCONTATOS
-                (
-                    [nome],
-                    [email],
-                    [telefone],
-                    [empresa],
-                    [cargo]
-                )
-                VALUES
-                (
-                    @nome,
-                    @email,
-                    @telefone,
-                    @empresa,
-                    @cargo
-                );";
-                InserirCommand += @"SELECT SCOPE_IDENTITY();";
-
-                SqlCommand comandoInsercao = new SqlCommand(InserirCommand, ObterConexaoSql());
-
-                comandoInsercao.CommandText = InserirCommand;
-                comandoInsercao.Parameters.Add("nome", registro.nome);
-                comandoInsercao.Parameters.Add("email", registro.email);
-                comandoInsercao.Parameters.Add("telefone", registro.telefone);
-                comandoInsercao.Parameters.Add("empresa", registro.empresa);
-                comandoInsercao.Parameters.Add("cargo", registro.cargo);
-
-                comandoInsercao.ExecuteNonQuery();
-            }
-            else
-            {
-                InserirCommand = @"INSERT INTO TbContatos 
-                    ( Nome, email, telefone, empresa, cargo)
-                    VALUES
-                    (@Nome, @email, @telefone, @empresa, @cargo);";
-                InserirCommand += @"SELECT LAST_INSERT_ROWID();";
-                SQLiteCommand comando = new SQLiteCommand(InserirCommand, ObterConexaoSqlite());
-                ObterConexaoSqlite().Execute(InserirCommand, registro);
-            }
+            Db.Atualizar(editarContato,ObtemParametrosContato(registro));
+        }
+        public override void Excluir(Contato registro)
+        {
+            Db.Deletar(excluirContato,AdicionarParametro("ID", registro.id));
+        }
+        public override void Inserir(Contato registro)
+        {
+            Db.Inserir(inserirContato, ObtemParametrosContato(registro));
+        }
+        public override List<Contato> SelecionarTodos()
+        {
+            return Db.SelecionarTodos(selecionarTodosContatos,ConverteEmContato);
+        }
+        public Contato ObterContatoPeloId(Contato registro)
+        {
+            return Db.Selecionar(selecionarContatoPorId,ConverteEmContato,AdicionarParametro("ID",registro.id));
+        }
+        public int ObterIdPeloNome(Contato registro)
+        {
+            var t = Db.Selecionar(obterIdPorNome, ConverteEmContato, AdicionarParametro("NOME", registro.nome));
+            return t.id;
+        }
+        public Contato ObterContatoPorId(Contato registro)
+        {
+            return Db.Selecionar(obterContatoPorId,ConverteEmContato,AdicionarParametro("ID",registro.id));
         }
 
-        public override List<Contato> ObterComandoSelecionarTodos()
+        #region Métodos privados
+        private Dictionary<string, object> ObtemParametrosContato(Contato contato)
         {
-            string comandoSelectComand = "";
-            List<Contato> registros = new List<Contato>();
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                comandoSelectComand = "SELECT * FROM TbContatos;";
+            var parametros = new Dictionary<string, object>();
+            if (contato.id != 0)
+                parametros.Add("ID", contato.id);
+            parametros.Add("NOME", contato.nome);
+            parametros.Add("EMAIL", contato.email);
+            parametros.Add("TELEFONE", contato.telefone);
+            parametros.Add("EMPRESA", contato.empresa);
+            parametros.Add("CARGO", contato.cargo);
 
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-                sqlDataAdapter.Fill(dataTable);
-                dataSet.ToString();
-
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Contato ct = new Contato();
-                    ct.id = Convert.ToInt32(row[0]);
-                    ct.nome = RetirarEspacos(row.Field<string>("nome"));
-                    ct.email = RetirarEspacos(row.Field<string>("email"));
-                    ct.telefone = Convert.ToInt64(row[3]);
-                    ct.empresa = RetirarEspacos(row.Field<string>("empresa"));
-                    ct.cargo = RetirarEspacos(row.Field<string>("cargo"));
-                    registros.Add(ct);
-                }
-            }
-            else
-            {
-                comandoSelectComand = "SELECT * FROM TbTarefas;";
-                SQLiteCommand ComandoSelecionartodos = new SQLiteCommand(comandoSelectComand, ObterConexaoSqlite());
-
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-
-                int nPI = sqlDataAdapter.Fill(dataTable);
-                string nPI2 = dataSet.ToString();
-            }
-            return registros;
+            return parametros;
         }
-
-        public Contato ObterContatoPeloId(int id)
+        private Contato ConverteEmContato(IDataReader reader)
         {
-            string comandoSelectComand = "";
+            var id = Convert.ToInt32(reader["ID"]);
+            var nome = Convert.ToString(reader["NOME"]);
+            var email = Convert.ToString(reader["EMAIL"]);
+            var telefone = Convert.ToInt32(reader["TELEFONE"]);
+            var empresa = Convert.ToString(reader["EMPRESA"]);
+            var cargo = Convert.ToString(reader["CARGO"]);
+
             Contato contato = new Contato();
-            if (ConfigurationManager.ConnectionStrings["Default"].ProviderName == "SQL")
-            {
-                comandoSelectComand = "SELECT * FROM TbContatos WHERE [Id] = @Id;";
 
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-                sqlDataAdapter.Fill(dataTable);
-                dataSet.ToString();
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Contato ct = new Contato();
-                    ct.id = Convert.ToInt32(row[0]);
-                    ct.nome = RetirarEspacos(row.Field<string>("nome"));
-                    ct.email = RetirarEspacos(row.Field<string>("email"));
-                    ct.telefone = Convert.ToInt64(row[3]);
-                    ct.empresa = RetirarEspacos(row.Field<string>("empresa"));
-                    ct.cargo = RetirarEspacos(row.Field<string>("cargo"));
-                    contato = ct;
-                }
-            }
-            else
-            {
-                comandoSelectComand = "SELECT * FROM TbContatos WHERE (Id) = @Id;";
+            contato.id = id;
+            contato.nome = nome;
+            contato.email = email;
+            contato.telefone = telefone;
+            contato.empresa = empresa;
+            contato.cargo = cargo;
 
-                DataTable dataTable = new DataTable(comandoSelectComand);
-                DataSet dataSet = new DataSet();
-                SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(comandoSelectComand, ObterConexaoSql());
-                sqlDataAdapter.Fill(dataTable);
-                dataSet.ToString();
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    Contato ct = new Contato();
-                    ct.id = Convert.ToInt32(row[0]);
-                    ct.nome = RetirarEspacos(row.Field<string>("nome"));
-                    ct.email = RetirarEspacos(row.Field<string>("email"));
-                    ct.telefone = Convert.ToInt64(row[3]);
-                    ct.empresa = RetirarEspacos(row.Field<string>("empresa"));
-                    ct.cargo = RetirarEspacos(row.Field<string>("cargo"));
-                    contato = ct;
-                }
-            }
             return contato;
         }
-
+        #endregion
     }
 }

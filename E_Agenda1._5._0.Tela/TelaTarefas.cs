@@ -71,7 +71,7 @@ namespace E_Agenda1._5._0.Tela
             List<Tarefa> tarefasPrioridadeBaixa = new List<Tarefa>();
             List<Tarefa> tarefasPrioridadeMedia = new List<Tarefa>();
             List<Tarefa> tarefasPrioridadeAlta = new List<Tarefa>();
-            List<Tarefa> tarefas = controladorTarefas.ObterComandoSelecionarAbertos();
+            List<Tarefa> tarefas = controladorTarefas.ObterComandoSelecionarFechados();
             if (tarefas.Count == 0)
                 Console.WriteLine("Não existem tarefas registradas");
             foreach (Tarefa tarefa in tarefas)
@@ -188,8 +188,11 @@ namespace E_Agenda1._5._0.Tela
                     Console.WriteLine("Numero inválido");
                 }
             }
+            Tarefa tarefa = ObterNovaTarefa();
+            tarefa.id = id;
+            tarefa.percentualConclusao = porcentagem;
             Console.Clear();
-            controladorTarefas.EditarPorcentagem(id, porcentagem);
+            controladorTarefas.EditarPorcentagem(tarefa);
             Console.WriteLine("Porcentagem atualizada com sucesso!");
 
         }
@@ -199,7 +202,9 @@ namespace E_Agenda1._5._0.Tela
             ListarTodasTarefas();
             Console.Clear();
             Console.WriteLine("Informe o id da tarefa a ser concluida");
-            controladorTarefas.ConcluirTarefa(Convert.ToInt32(Console.ReadLine()));
+            Tarefa registro = new Tarefa();
+            registro.id = Convert.ToInt32(Console.ReadLine());
+            controladorTarefas.ConcluirTarefa(registro);
             Console.Clear();
             Console.WriteLine("Tarefa concluida!");
         }
@@ -208,18 +213,26 @@ namespace E_Agenda1._5._0.Tela
             Console.Clear();
             ListarTodasTarefas();
             Console.WriteLine("Informe o id a ser editado");
+            int id = Convert.ToInt32(Console.ReadLine());
             Tarefa tarefa = ObterNovaTarefa();
-            tarefa.id = Convert.ToInt32(Console.ReadLine());
+            tarefa.id = id;
+            Console.Clear();
+            Console.WriteLine("Informe a porcentagem");
+            tarefa.percentualConclusao = Convert.ToInt32(Console.ReadLine());
             controladorTarefas.EditarRegistro(tarefa);
             Console.Clear();
             Console.WriteLine("Tarefa editada com sucesso!");
+            Console.ReadLine();
+            Console.Clear();
         }
         private void ExcluirTarefa()
         {
             Console.Clear();
             ListarTodasTarefas();
             Console.WriteLine("Informe o id a ser excluido");
-            controladorTarefas.ExcluiRegistro(Convert.ToInt32(Console.ReadLine()));
+            Tarefa tarefa = new Tarefa();
+            tarefa.id = Convert.ToInt32(Console.ReadLine());
+            controladorTarefas.ExcluiRegistro(tarefa);
             Console.Clear();
             Console.WriteLine("Excluido com sucesso!");
             Console.ReadKey();
