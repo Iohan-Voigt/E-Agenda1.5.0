@@ -64,6 +64,9 @@ namespace E_Agenda1._5._0.WindowsApp
             this.button_Inserir_Contatos = new System.Windows.Forms.Button();
             this.dataGridViewContatos = new System.Windows.Forms.DataGridView();
             this.tabPageCompromissos = new System.Windows.Forms.TabPage();
+            this.button_ListarFuturos_Compromissos = new System.Windows.Forms.Button();
+            this.button_ListarPassados_Compromissos = new System.Windows.Forms.Button();
+            this.button_ListarTodos_Compromissos = new System.Windows.Forms.Button();
             this.listBox_Contato_Compromissos = new System.Windows.Forms.ListBox();
             this.dateTimePicker_DataFinal_Compromissos = new System.Windows.Forms.DateTimePicker();
             this.dateTimePicker_DataInicio_Compromissos = new System.Windows.Forms.DateTimePicker();
@@ -82,9 +85,6 @@ namespace E_Agenda1._5._0.WindowsApp
             this.button_Editar_Compromissos = new System.Windows.Forms.Button();
             this.button_Inserir_Compromissos = new System.Windows.Forms.Button();
             this.dataGridViewCompromissos = new System.Windows.Forms.DataGridView();
-            this.button_ListarTodos_Compromissos = new System.Windows.Forms.Button();
-            this.button_ListarPassados_Compromissos = new System.Windows.Forms.Button();
-            this.button_ListarFuturos_Compromissos = new System.Windows.Forms.Button();
             this.tabControlMenu.SuspendLayout();
             this.tabPageTarefas.SuspendLayout();
             this.panel_Botoes.SuspendLayout();
@@ -477,6 +477,36 @@ namespace E_Agenda1._5._0.WindowsApp
             this.tabPageCompromissos.Text = "Compromissos";
             this.tabPageCompromissos.UseVisualStyleBackColor = true;
             // 
+            // button_ListarFuturos_Compromissos
+            // 
+            this.button_ListarFuturos_Compromissos.Location = new System.Drawing.Point(536, 4);
+            this.button_ListarFuturos_Compromissos.Name = "button_ListarFuturos_Compromissos";
+            this.button_ListarFuturos_Compromissos.Size = new System.Drawing.Size(104, 23);
+            this.button_ListarFuturos_Compromissos.TabIndex = 20;
+            this.button_ListarFuturos_Compromissos.Text = "Listar Futuros";
+            this.button_ListarFuturos_Compromissos.UseVisualStyleBackColor = true;
+            this.button_ListarFuturos_Compromissos.Click += new System.EventHandler(this.button_ListarFuturos_Compromissos_Click);
+            // 
+            // button_ListarPassados_Compromissos
+            // 
+            this.button_ListarPassados_Compromissos.Location = new System.Drawing.Point(536, 33);
+            this.button_ListarPassados_Compromissos.Name = "button_ListarPassados_Compromissos";
+            this.button_ListarPassados_Compromissos.Size = new System.Drawing.Size(104, 23);
+            this.button_ListarPassados_Compromissos.TabIndex = 19;
+            this.button_ListarPassados_Compromissos.Text = "Listar Passados";
+            this.button_ListarPassados_Compromissos.UseVisualStyleBackColor = true;
+            this.button_ListarPassados_Compromissos.Click += new System.EventHandler(this.button_ListarPassados_Compromissos_Click);
+            // 
+            // button_ListarTodos_Compromissos
+            // 
+            this.button_ListarTodos_Compromissos.Location = new System.Drawing.Point(536, 62);
+            this.button_ListarTodos_Compromissos.Name = "button_ListarTodos_Compromissos";
+            this.button_ListarTodos_Compromissos.Size = new System.Drawing.Size(104, 23);
+            this.button_ListarTodos_Compromissos.TabIndex = 18;
+            this.button_ListarTodos_Compromissos.Text = "ListarFuturos";
+            this.button_ListarTodos_Compromissos.UseVisualStyleBackColor = true;
+            this.button_ListarTodos_Compromissos.Click += new System.EventHandler(this.button_ListarTodos_Compromissos_Click);
+            // 
             // listBox_Contato_Compromissos
             // 
             this.listBox_Contato_Compromissos.FormattingEnabled = true;
@@ -632,36 +662,6 @@ namespace E_Agenda1._5._0.WindowsApp
             this.dataGridViewCompromissos.Size = new System.Drawing.Size(721, 301);
             this.dataGridViewCompromissos.TabIndex = 0;
             this.dataGridViewCompromissos.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewCompromissos_CellContentClick);
-            // 
-            // button_ListarTodos_Compromissos
-            // 
-            this.button_ListarTodos_Compromissos.Location = new System.Drawing.Point(536, 62);
-            this.button_ListarTodos_Compromissos.Name = "button_ListarTodos_Compromissos";
-            this.button_ListarTodos_Compromissos.Size = new System.Drawing.Size(104, 23);
-            this.button_ListarTodos_Compromissos.TabIndex = 18;
-            this.button_ListarTodos_Compromissos.Text = "ListarFuturos";
-            this.button_ListarTodos_Compromissos.UseVisualStyleBackColor = true;
-            this.button_ListarTodos_Compromissos.Click += new System.EventHandler(this.button_ListarTodos_Compromissos_Click);
-            // 
-            // button_ListarPassados_Compromissos
-            // 
-            this.button_ListarPassados_Compromissos.Location = new System.Drawing.Point(536, 33);
-            this.button_ListarPassados_Compromissos.Name = "button_ListarPassados_Compromissos";
-            this.button_ListarPassados_Compromissos.Size = new System.Drawing.Size(104, 23);
-            this.button_ListarPassados_Compromissos.TabIndex = 19;
-            this.button_ListarPassados_Compromissos.Text = "Listar Passados";
-            this.button_ListarPassados_Compromissos.UseVisualStyleBackColor = true;
-            this.button_ListarPassados_Compromissos.Click += new System.EventHandler(this.button_ListarPassados_Compromissos_Click);
-            // 
-            // button_ListarFuturos_Compromissos
-            // 
-            this.button_ListarFuturos_Compromissos.Location = new System.Drawing.Point(536, 4);
-            this.button_ListarFuturos_Compromissos.Name = "button_ListarFuturos_Compromissos";
-            this.button_ListarFuturos_Compromissos.Size = new System.Drawing.Size(104, 23);
-            this.button_ListarFuturos_Compromissos.TabIndex = 20;
-            this.button_ListarFuturos_Compromissos.Text = "Listar Futuros";
-            this.button_ListarFuturos_Compromissos.UseVisualStyleBackColor = true;
-            this.button_ListarFuturos_Compromissos.Click += new System.EventHandler(this.button_ListarFuturos_Compromissos_Click);
             // 
             // Menu
             // 
